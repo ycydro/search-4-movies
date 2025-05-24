@@ -17,7 +17,7 @@ const MovieCard = ({movie:
                <p>{vote_average ? vote_average.toFixed(1) : `N/A`}</p>
             </div>
             <p className='lang'> 
-               {original_language}
+               {original_language || `N/A`}
             </p>
             <p className='year'> 
                {release_date ? release_date.split(`-`)[0] : `N/A`} 

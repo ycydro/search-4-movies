@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useDebounce } from 'react-use';
 import Search from './components/Search'
 import Spinner from './components/Spinner'
 import MovieCard from './components/MovieCard';
@@ -17,16 +18,21 @@ const API_OPTIONS = {
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [errorMessage, setErrorMessage] = useState(null);
   const [movieList, setMovieList] = useState ([]);
   const [isLoading, setIsLoading] = useState (false);
+
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 1250, [searchTerm])
   
-  const fetchMovies = async () => {
+  const fetchMovies = async (query = '') => {
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
-      const endpoint = `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
+      const endpoint = query 
+      ?  `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
+      : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`
       const response = await fetch(endpoint, API_OPTIONS);
 
       if (!response.ok) {
@@ -40,27 +46,34 @@ const App = () => {
         setMovieList([]);
         return
       }
+
       setMovieList(data.results || []);
+
     } catch(err) {
+
       console.error(`Error fetching movies: ${err}`)
       setErrorMessage('Failed to fetch movies. Please try again later!')
+      
     } finally {
       setIsLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchMovies();
-  }, []);
+    fetchMovies(debouncedSearchTerm);
+  }, [debouncedSearchTerm]);
 
   return (
     <main>
       <div className='pattern' />
       <div className='wrapper'>
         <header>
+
           <img src="./hero.png" alt="" />
           <h1>Find <span className='text-gradient'>Movies</span> You'll Enjoy Without the Hassle</h1>
+
           <Search searchTerm={searchTerm} setSearchTerm = {setSearchTerm}/>
+          
         </header>
         
         <section className='all-movies'>
